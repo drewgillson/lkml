@@ -1,6 +1,9 @@
 {
     "compilerOptions": {
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "module": "commonjs",
+        "outDir": "out",
+        "sourceMap": true
     },
     "files": [
         "lkml.ts"

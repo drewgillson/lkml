@@ -50,9 +50,25 @@ const lkml = new LookML();
 let out = lkml.load(`
 view: a {
     sql_table_name: a ;;
+    drill_fields: [id]
+
+    dimension: id1 {
+        primary_key: yes
+        type: string1
+        sql: \${TABLE}.id ;;
+    }
+    measure: count {
+        type: count
+    }
 }
 view: b {
     sql_table_name: b ;;
+    dimension: id2 {
+        primary_key: yes
+        type: string2
+        sql: \${TABLE}.id ;;
+    }
 }`)
 
-console.log(out);
+console.log(out)
+//console.log(out['views'][1]['dimensions']);

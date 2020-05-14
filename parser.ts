@@ -7,8 +7,8 @@ declare global {
     interface String {
         repeat(c: number): string;
     }
-    interface ArrayConstructor {
-        from(arrayLike: any, mapFn?, thisArg?): Array<any>;
+    interface ObjectConstructor {
+        assign(...objects: Object[]): Object;
     }
 }
 
@@ -17,7 +17,7 @@ const DELIMITER: string = ". "
 const DEBUG = false
 
 export class Parser {
-    /* Parses a sequence of tokenized LookML into a Python object.
+    /* Parses a sequence of tokenized LookML into a Javascript object.
     This parser is a recursive descent parser which uses the grammar listed below (in
     PEG format). Each grammar rule aligns with a corresponding method (e.g.
     parse_expression).
@@ -205,7 +205,6 @@ export class Parser {
                 target[key] = update[key]
             }
         }
-        // TODO: this function is expecting target and update to be updated by reference? Might need to return values
     }
 
     parse_expression(): object {
@@ -241,15 +240,14 @@ export class Parser {
                 continue
             }
 
-            /*let list = this.parse_list()
+            let list = this.parse_list()
             if (list) {
-                expression.update(list)
+                expression = Object.assign(expression, list)
                 continue
             }
 
             let token = this.tokens[this.progress]
             throw new SyntaxError("Unable to find a matching expression for " + token.id + " on line " + token.line_number)
-            */
         }
 
         if (this.log_debug) {
@@ -465,5 +463,127 @@ export class Parser {
             this.backtrack(mark)
             return false
         }
+    }
+
+    parse_list() {
+        /* Returns a dictionary that represents a LookML list.
+        Returns:
+            A dictionary with the parsed list or None if the grammar doesn't match
+        Grammar:
+            list ← key "[" csv? "]"
+        Examples:
+            Input (before tokenizing into a stream):
+            ------
+            "timeframes: [date, week]"
+            Output (dictionary):
+            -------
+            {"timeframes": ["date", "week"]} */
+
+        let mark = this.index
+        this.depth += 1
+
+        if (this.log_debug) {
+            let grammar = "[list] = key '[' csv? ']'"
+            console.log(DELIMITER.repeat(this.get_depth()) + "Try to parse " + grammar)
+        }
+
+        let key = this.parse_key()
+        if (!key) {
+            return key
+        }
+
+        if (this.check(tokens.ListStartToken)) {
+            this.advance()
+        }
+        else {
+            this.depth -= 1
+            this.backtrack(mark)
+            return false
+        }
+
+        let csv = this.parse_csv()
+        if (!csv) {
+            csv = []
+        }
+
+        if (this.check(tokens.ListEndToken)) {
+            this.advance()
+            let list = []
+            list[key] = csv
+            if (this.log_debug) {
+                console.log(DELIMITER.repeat(this.get_depth()) + "Successfully parsed a list.")
+            }
+            else {
+                return list
+            }
+        }
+        else {
+            this.depth -= 1
+            this.backtrack(mark)
+            return false
+        }
+    }
+
+    parse_csv() {
+        /* Returns a list that represents comma-separated LookML values.
+        Returns:
+            A list with the parsed values or None if the grammar doesn't match
+        Grammar:
+            csv ← (literal / quoted_literal) ("," (literal / quoted_literal))* ","?
+        Examples:
+            Input (before tokenizing into a stream):
+            ------
+            1) "[date, week]"
+            2) "['foo', 'bar']"
+            Output (list):
+            -------
+            1) ["date", "week"]
+            2) ["foo", "bar"] */
+
+        let mark = this.index
+        this.depth += 1
+    
+        if (this.log_debug) {
+            let grammar = '[csv] = (literal / quoted_literal) ("," (literal / quoted_literal))* ","?'
+            console.log(DELIMITER.repeat(this.get_depth()) + "Try to parse " + grammar)
+        }
+        let values = []
+
+        if (this.check(tokens.LiteralToken, tokens.QuotedLiteralToken)) {
+            values.push(this.consume_token_value())
+        }
+        else {
+            this.depth -= 1
+            this.backtrack(mark)
+            return false
+        }
+
+        while (!this.check(tokens.ListEndToken)) {
+            if (this.check(tokens.CommaToken)) {
+                this.advance()
+            }
+            else {
+                this.depth -= 1
+                this.backtrack(mark)
+                return false
+            }
+
+            if (this.check(tokens.LiteralToken, tokens.QuotedLiteralToken)) {
+                values.push(this.consume_token_value())
+            }
+            else if (this.check(tokens.ListEndToken)) {
+                break
+            }
+            else {
+                this.depth -= 1
+                this.backtrack(mark)
+                return false
+            }
+        }
+
+        if (this.log_debug) {
+            console.log(DELIMITER.repeat(this.get_depth()) + "Successfully parsed comma-separated values.")
+        }
+        return values
     }
 }
