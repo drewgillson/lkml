@@ -3,7 +3,13 @@
         "experimentalDecorators": true,
         "module": "commonjs",
         "outDir": "out",
-        "sourceMap": true
+        "sourceMap": true,
+        "target": "es6",
+        "lib": [
+            "es6",
+            "dom",
+            "es2017.object",
+        ]
     },
     "files": [
         "lkml.ts"

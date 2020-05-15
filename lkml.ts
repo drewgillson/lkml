@@ -1,5 +1,6 @@
 import { Lexer } from "./lexer"
 import { Parser } from "./parser"
+import { Serializer } from "./serializer"
 
 class LookML {
     load(text: string): Object {
@@ -9,10 +10,9 @@ class LookML {
 
         let lexer = new Lexer(text)
         let tokens = lexer.scan()
-        //console.log(tokens)
         let parser = new Parser(tokens)
         let result = parser.parse()
-        return(result)
+        return result
     }
 
     dump(obj: Object): string {
@@ -21,54 +21,45 @@ class LookML {
             obj: The Javascript object to be serialized to LookML
         Returns:
             A LookML string */
-        return("a string")
+
+        let serializer = new Serializer()
+        let result = serializer.serialize(obj)
+        return result
     }
 }
 
 const lkml = new LookML();
-/*
-    sql_table_name: salesforce.tasks ;;
-    drill_fields: [id]
-
-    dimension: id1 {
-        primary_key: yes
-        type: string1
-        sql: \${TABLE}.id ;;
-    }
-
-    dimension: id2 {
-        primary_key: yes
-        type: string2
-        sql: \${TABLE}.id ;;
-    }
-
-    measure: count {
-        type: count
-        drill_fields: [id, account.name, account.id]
-    }
-*/
 let out = lkml.load(`
-view: a {
-    sql_table_name: a ;;
+view: sales {
+    sql_table_name: db.sales ;;
     drill_fields: [id]
 
-    dimension: id1 {
+    dimension: order_number {
         primary_key: yes
         type: string1
         sql: \${TABLE}.id ;;
-    }
-    measure: count {
-        type: count
     }
 }
-view: b {
-    sql_table_name: b ;;
-    dimension: id2 {
+view: sales_products {
+    sql_table_name: db.sales_products ;;
+
+    dimension: sku {
         primary_key: yes
-        type: string2
+        type: string
         sql: \${TABLE}.id ;;
     }
-}`)
 
-console.log(out)
-//console.log(out['views'][1]['dimensions']);
+    measure: total_price {
+        type: sum
+        sql: \${$TABLE}.price ;;
+    }
+
+    measure: count {
+        type: count
+        drill_fields: [sku, account.name, account.id]
+    }
+}
+`)
+
+let str = lkml.dump(out)
+console.log(str)
