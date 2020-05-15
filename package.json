@@ -5,7 +5,7 @@
   "main": "out/index.js",
   "types": "out/index.d.ts",
   "scripts": {
-    "test": "node out/test.js"
+    "test": "node out/smoke.js"
   },
   "repository": {
     "type": "git",

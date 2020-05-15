@@ -4,15 +4,15 @@
         "module": "commonjs",
         "outDir": "out",
         "sourceMap": true,
-        "target": "es6",
+        "target": "es2020",
         "lib": [
-            "es6",
+            "es2020",
             "dom",
-            "es2017.object",
         ]
     },
-    "files": [
-        "src/test.ts"
+    "include": [
+        "src/**/*",
+        "test/**/*",
     ],
     "declaration": true
 }

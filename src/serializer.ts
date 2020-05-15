@@ -5,6 +5,12 @@ import { EXPR_BLOCK_KEYS
        , PLURAL_KEYS
        , QUOTED_LITERAL_KEYS } from "./keys"
 
+declare global {
+    interface Object {
+        entries<X extends string,Y>(o: { [key in X]: Y }): [X, Y][];
+    }
+}
+
 export class Serializer {
     /* Serializes a Javascript object into a LookML string.
     Review the grammar specified for the Parser class to understand how LookML
@@ -36,27 +42,27 @@ export class Serializer {
         this.newline_indent = "\n"
     }
 
-    increase_level() {
+    increase_level(): void {
         // Increases the indent level of the current line by one tab.
         this.field_counter = 0
         this.level += 1
         this.update_indent()
     }
 
-    decrease_level() {
+    decrease_level(): void {
         // Decreases the indent level of the current line by one tab.
         this.field_counter = 0
         this.level -= 1
         this.update_indent()
     }
 
-    update_indent() {
+    update_indent(): void {
         // Sets the indent string based on the current level.
         this.indent = this.base_indent.repeat(this.level)
         this.newline_indent = "\n" + this.indent
     }
 
-    is_plural_key(key: string) {
+    is_plural_key(key: string): boolean {
         /* Returns True if the key is a repeatable key.
         For example, `dimension` can be repeated, but `sql` cannot be.
         The key `allowed_value` is a special case and changes behavior depending on its
@@ -64,7 +70,7 @@ export class Serializer {
         repeated. Otherwise, it can be repeated. */
 
         if (key.substr(-1) == "s") {
-            let singular_key = key.replace(/s$/, '');
+            let singular_key: string = key.replace(/s$/, '');
             return (PLURAL_KEYS.indexOf(singular_key) != -1 && !(
                 singular_key == "allowed_value"
                 && this.parent_key.replace(/s$/, '') == "access_grant"
@@ -75,12 +81,12 @@ export class Serializer {
         }
     }
 
-    *chain_with_newline(obj: Object) {
+    *chain_with_newline(obj: Object): Generator<string> {
         for (let [key, value] of Object.entries(Object.assign({},obj))) {
-            let any = this.write_any(key, value)
-            let output = ""
+            let any: Generator<string> = this.write_any(key, value)
+            let output: string = ""
             while (true) {
-                let iter = any.next()
+                let iter: IteratorResult<string> = any.next()
                 if (!iter.done) {
                     output += iter.value
                 }
@@ -93,13 +99,13 @@ export class Serializer {
         }
     }
 
-    serialize(obj: Object) {
+    serialize(obj: Object): string {
         // Returns a LookML string serialized from an object.
     
         return "" + this.chain_with_newline(obj).next().value
     }
 
-    *expand_list(key: string, values: any) {
+    *expand_list(key: string, values: any): Generator<string> {
         /* Expands and serializes a list of values for a repeatable key.
         This method is exclusively used for sequences of values with a repeated key like
         `dimensions` or `views`, which need to be serialized sequentially with a newline
@@ -113,7 +119,7 @@ export class Serializer {
         if (key != "filters" && key != "bind_filters") {
             key = key.replace(/s$/, '')
         }
-        let i = 0
+        let i: number = 0
         for (let [idx, val] of values.entries()) {
             if (i > 0) {
                 yield "\n"
@@ -123,7 +129,7 @@ export class Serializer {
         }
     }
 
-    *write_any(key: string, value: any) {
+    *write_any(key: string, value: any): Generator<string> {
         /* Dynamically serializes a Javascript object based on its type.
         Args:
             key: A LookML field type (e.g. "suggestions" or "hidden")
@@ -133,8 +139,8 @@ export class Serializer {
         Returns:
             A generator of serialized string chunks */
 
-        let value_type = typeof(value)
-        let key_type = typeof(key)
+        let value_type: string = typeof(value)
+        let key_type: string = typeof(key)
 
         if (value_type == 'string') {
             yield* this.write_pair(key, value)
@@ -148,7 +154,7 @@ export class Serializer {
             }
         }
         else if (value_type == 'object') {
-            let name = ""
+            let name: string = ""
             if (KEYS_WITH_NAME_FIELDS.indexOf(key) != -1 || Object.keys(value).indexOf("name") == -1) {
                 name = ""
             }
@@ -160,10 +166,10 @@ export class Serializer {
                 key = value.name
             }
             
-            let block = this.write_block(key, value, name)
-            let output = ""
+            let block: Generator<string> = this.write_block(key, value, name)
+            let output: string = ""
             while (true) {
-                let iter = block.next()
+                let iter: IteratorResult<string> = block.next()
                 if (!iter.done) {
                     output += iter.value
                 }
@@ -180,7 +186,7 @@ export class Serializer {
         this.field_counter += 1
     }
 
-    *write_block(key: any, fields: Object, name: string) {
+    *write_block(key: any, fields: Object, name: string): Generator<string> {
         /* Serializes an object to a LookML block.
         Args:
             key: A LookML field type (e.g. "dimension")
@@ -220,7 +226,7 @@ export class Serializer {
         yield "}"
     }
 
-    *write_set(key: string, values: any) {
+    *write_set(key: string, values: any): Generator<string> {
         /* Serializes a sequence to a LookML block.
         Args:
             key: A LookML field type (e.g. "fields")
@@ -230,7 +236,7 @@ export class Serializer {
 
         `suggestions` is only quoted when it's a set, so override the default */
 
-        let force_quote = false
+        let force_quote: boolean = false
         if (key == "suggestions") {
             force_quote = true
         }
@@ -239,7 +245,7 @@ export class Serializer {
         yield "["
 
         if (values) {
-            let i = 0
+            let i: number = 0
             if (values.length > 5) {
                 this.increase_level()
                 yield this.newline_indent
@@ -266,7 +272,7 @@ export class Serializer {
         yield "]"
     }
 
-    *write_pair(key: string, value: string) {
+    *write_pair(key: string, value: string): Generator<string> {
         /* Serializes a key and value to a LookML pair.
         Args:
             key: A LookML field type (e.g. "hidden")
@@ -278,7 +284,7 @@ export class Serializer {
         yield* this.write_value(key, value)
     }
 
-    *write_key(key: string) {
+    *write_key(key: string): Generator<string> {
         /* Serializes a key to LookML.
         Args:
             key: A LookML field type (e.g. "sql")
@@ -287,7 +293,7 @@ export class Serializer {
         yield this.indent + key + ":"
     }
 
-    *write_value(key: string, value: any, force_quote: boolean = false) {
+    *write_value(key: string, value: any, force_quote: boolean = false): Generator<string> {
         /* Serializes a value to LookML, quoting it required by the key or forced.
         Args:
             key: A LookML field type (e.g. "hidden")

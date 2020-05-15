@@ -68,7 +68,7 @@ export class Parser {
         this.log_debug = DEBUG
     }
 
-    backtrack(mark) {
+    backtrack(mark: number): void {
         // Backtrack to a previous position on failure.
         if (this.index > this.progress) {
             this.progress = this.index
@@ -76,7 +76,7 @@ export class Parser {
         this.jump_to_index(mark)
     }
 
-    jump_to_index(index: number) {
+    jump_to_index(index: number): void {
         // Sets the parser index to a specified value.
         this.index = index
     }
@@ -126,7 +126,7 @@ export class Parser {
             }
 
             // Determine if input_tokens are valid Tokens
-            let valid_tokens = 0
+            let valid_tokens: number = 0
             for (let type_key in tokens.tokenTypes) {
                 let token_type = tokens.tokenTypes[type_key];
                 for (let token_key in input_tokens) {

@@ -1,4 +1,4 @@
-import { lkml } from './lkml.js'
+import { lkml } from '../out/lkml.js'
 
 const LookML = new lkml();
 let out = LookML.load(`

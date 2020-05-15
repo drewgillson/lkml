@@ -24,23 +24,6 @@ export class Token {
         
         this.line_number = line_number
     }
-
-    __eq__(self, other): boolean {
-        // Compare one Token to another by their type.
-
-        return self.constructor.name == other.constructor.name
-    }
-
-    __repr__(self): string {
-        /* Returns the token's string representation, truncated to 25 characters.
-        If the token has a `value` attribute, include that in the output. */
-        
-        let value = self.value.strip()
-        if (value.length > 25) {
-            value = value.substring(0,25) + " ... "
-        }
-        return self.class.name + "(" + value + ")"
-    }
 }
 
 @register_token()
@@ -50,12 +33,6 @@ export class ContentToken {
     token: Token
     value: string
     line_number: number
-
-    __eq__(self, other): boolean {
-        // Compare one ContentToken to another by their values.
-
-        return(self.id == other.id && self.value == other.value)
-    }
 }
 
 @register_token()
