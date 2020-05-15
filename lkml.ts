@@ -2,7 +2,7 @@ import { Lexer } from "./lexer"
 import { Parser } from "./parser"
 import { Serializer } from "./serializer"
 
-export class LookML {
+export class lkml {
     load(text: string): Object {
         /* Parse LookML into a Javascript object.
         Args:

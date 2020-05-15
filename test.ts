@@ -1,7 +1,7 @@
-import { LookML } from './lkml.js'
+import { lkml } from './lkml.js'
 
-const lkml = new LookML();
-let out = lkml.load(`
+const LookML = new lkml();
+let out = LookML.load(`
 view: sales {
     sql_table_name: db.sales ;;
     drill_fields: [id]
@@ -33,5 +33,5 @@ view: sales_products {
 }
 `)
 
-let str = lkml.dump(out)
+let str = LookML.dump(out)
 console.log(str)
