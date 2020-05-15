@@ -12,6 +12,7 @@
         ]
     },
     "files": [
-        "lkml.ts"
-    ]
+        "test.ts"
+    ],
+    "declaration": true
 }

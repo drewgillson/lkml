@@ -1,0 +1,23 @@
+{
+  "name": "lkml",
+  "version": "1.0.0",
+  "description": "A speedy LookML parser & serializer implemented in Typescript (port of joshtemple/lkml)",
+  "main": "out/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "node out/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drewgillson/lkml.git"
+  },
+  "keywords": [
+    "lookml","looker","lkml"
+  ],
+  "author": "Drew Gillson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/drewgillson/lkml/issues"
+  },
+  "homepage": "https://github.com/drewgillson/lkml#readme"
+}
