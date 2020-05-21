@@ -196,3 +196,16 @@ export class QuotedLiteralToken {
         this.line_number = line_number
     }
 }
+
+@register_token()
+export class RefinementToken {
+    // Contains the value of a refined block
+
+    id: string = "<refinement>"
+    name: string = "RefinementToken"
+    line_number: number
+
+    constructor(line_number: number) {
+        this.line_number = line_number
+    }
+}

@@ -1,6 +1,8 @@
-import { lkml } from '../out/lkml.js'
+import { lkml } from '../src/lkml.js'
 
 const LookML = new lkml();
+
+console.log("### Testing views, dimensions, and measures ###")
 let out = LookML.load(`
 view: sales {
     sql_table_name: db.sales ;;
@@ -34,4 +36,26 @@ view: sales_products {
 `)
 
 let str = LookML.dump(out)
+console.log(str)
+
+console.log("### Testing refinements ###")
+out = LookML.load(`
+view: tickets {
+    label: "foo"
+    dimension: test1 {
+        label: "Test"
+    }
+}
+view: +tickets {
+    label: "baz"
+    dimension: test2 {
+        label: "Another Test"
+    }
+}
+view: +tickets {
+    label: "bar"
+}
+`)
+
+str = LookML.dump(out)
 console.log(str)

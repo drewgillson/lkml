@@ -225,9 +225,8 @@ export class Parser {
         if (this.check(tokens.StreamStartToken)) {
             this.advance()
         }
-        let i = 0
-        while (!this.check(tokens.StreamEndToken, tokens.BlockEndToken) && i<10) {
-            i++
+        while (!this.check(tokens.StreamEndToken, tokens.BlockEndToken)) {
+
             let block = this.parse_block()
             if (block) {
                 this.update_tree(expression, block)
@@ -293,9 +292,14 @@ export class Parser {
             return key
         }
 
-        let literal = false
+        let literal = ""
+        if (this.check(tokens.RefinementToken)) {
+            this.advance()
+            literal = "+"
+        }
+
         if (this.check(tokens.LiteralToken)) {
-            literal = this.consume_token_value()
+            literal += this.consume_token_value()
         }
 
         if (this.check(tokens.BlockStartToken)) {

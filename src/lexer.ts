@@ -109,6 +109,10 @@ export class Lexer {
                 this.advance()
                 this.tokens.push(new CHARACTER_TO_TOKEN[ch](this.line_number))
             }
+            else if (ch == "+") {
+                this.tokens.push(new tokens.RefinementToken(this.line_number))
+                this.advance()
+            }
             else if (this.check_for_expression_block(this.peek_multiple(25))) {
                 this.tokens.push(this.scan_literal())
                 this.scan_until_token()
