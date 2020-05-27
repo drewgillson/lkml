@@ -563,7 +563,12 @@ export class Parser {
         }
 
         while (!this.check(tokens.ListEndToken)) {
+            let key = ""
             if (this.check(tokens.CommaToken)) {
+                this.advance()
+            }
+            else if (this.check(tokens.ValueToken)) {
+                key = values.pop()
                 this.advance()
             }
             else {
@@ -573,7 +578,12 @@ export class Parser {
             }
 
             if (this.check(tokens.LiteralToken, tokens.QuotedLiteralToken)) {
-                values.push(this.consume_token_value())
+                if (key.length) {
+                    values[key] = this.consume_token_value()
+                }
+                else {
+                    values.push(this.consume_token_value())
+                }
             }
             else if (this.check(tokens.ListEndToken)) {
                 break

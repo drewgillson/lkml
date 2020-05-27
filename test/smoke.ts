@@ -57,5 +57,15 @@ view: +tickets {
 }
 `)
 
+console.log("### Testing new filters syntax ###")
+out = LookML.load(`
+view: event {
+    measure: filtered {
+        label: "A Filtered Measure"
+        filters: [created_date: "7 Days", user.status: "-disabled"]
+    }
+}
+`)
+
 str = LookML.dump(out)
 console.log(str)

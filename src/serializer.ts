@@ -67,9 +67,10 @@ export class Serializer {
         For example, `dimension` can be repeated, but `sql` cannot be.
         The key `allowed_value` is a special case and changes behavior depending on its
         parent key. If its parent key is `access_grant`, it is a list and cannot be
-        repeated. Otherwise, it can be repeated. */
+        repeated. Otherwise, it can be repeated. The key `filters` is another special
+        key associated to the new filters syntax, and it also cannot be repeated. */
 
-        if (key.substr(-1) == "s") {
+        if (key.substr(-1) == "s" && key != "filters") {
             let singular_key: string = key.replace(/s$/, '');
             return (PLURAL_KEYS.indexOf(singular_key) != -1 && !(
                 singular_key == "allowed_value"
@@ -249,24 +250,25 @@ export class Serializer {
             if (values.length > 5) {
                 this.increase_level()
                 yield this.newline_indent
-                for (let [idx, val] of Object.entries(values)) {
-                    if (i > 0) {
-                        yield "," + this.newline_indent
+            }
+            for (let [idx, val] of Object.entries(values)) {
+                if (i > 0) {
+                    yield ","
+                    if (values.length > 5) {
+                        yield this.newline_indent
                     }
-                    yield* this.write_value(idx, val, force_quote)
-                    i++
                 }
+                if (typeof(idx) == 'string') {
+                    yield* this.write_labeled_set(idx, val)
+                }
+                else {
+                    yield* this.write_value(idx, val, force_quote)
+                }
+                i++
+            }
+            if (values.length > 5) {
                 this.decrease_level()
                 yield this.newline_indent
-            }
-            else {
-                for (let [idx, val] of Object.entries(values)) {
-                    if (i > 0) {
-                        yield ", "
-                    }
-                    yield* this.write_value(idx, val, force_quote)
-                    i++
-                }
             }
         }
         yield "]"
@@ -314,5 +316,21 @@ export class Serializer {
         else {
             yield value
         }
+    }
+
+    *write_labeled_set(key: string, value: any): Generator<string> {
+        /* Serializes a labeled set with string keys to LookML
+        (e.g. [created_at: "7 Days", user.status: "-disabled"])
+        Args:
+            key: An array key (e.g. "created_at")
+            value: The value string (e.g. "7 Days")
+        Returns:
+            A generator of serialized string chunks */
+
+        yield key
+        yield ":"
+        yield '"'
+        yield value
+        yield '"'
     }
 }
