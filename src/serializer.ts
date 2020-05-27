@@ -258,7 +258,7 @@ export class Serializer {
                         yield this.newline_indent
                     }
                 }
-                if (typeof(idx) == 'string') {
+                if (typeof(idx) == 'string' && isNaN(Number(idx))) {
                     yield* this.write_labeled_set(idx, val)
                 }
                 else {

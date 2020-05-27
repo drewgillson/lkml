@@ -5,19 +5,26 @@
   "main": "out/index.js",
   "types": "out/index.d.ts",
   "scripts": {
-    "test": "node out/test/smoke.js"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/drewgillson/lkml.git"
   },
   "keywords": [
-    "lookml","looker","lkml"
+    "lookml",
+    "looker",
+    "lkml"
   ],
   "author": "Drew Gillson",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/drewgillson/lkml/issues"
   },
-  "homepage": "https://github.com/drewgillson/lkml#readme"
+  "homepage": "https://github.com/drewgillson/lkml#readme",
+  "devDependencies": {
+    "@types/jest": "^25.2.3",
+    "jest": "^26.0.1",
+    "ts-jest": "^26.0.0"
+  }
 }
