@@ -517,9 +517,7 @@ export class Parser {
             if (this.log_debug) {
                 console.log(DELIMITER.repeat(this.get_depth()) + "Successfully parsed a list.")
             }
-            else {
-                return list
-            }
+            return list
         }
         else {
             this.depth -= 1

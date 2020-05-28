@@ -122,3 +122,22 @@ export const CHARACTER_TO_TOKEN = {
     ":": tokens.ValueToken,
     ";": tokens.ExpressionBlockEndToken,
 }
+
+export const KEYS_FOR_SETS: string[] = [
+    "filters",
+    "required_access_grants",
+    "timeframes",
+    "intervals",
+    "extends",
+    "cluster_keys",
+    "sortkeys",
+    "indexes",
+    "partition_keys",
+    "fields",
+    "alias",
+    "required_fields",
+    "drill_fields",
+    "tags",
+    "tiers",
+    "suggestions",
+]

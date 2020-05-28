@@ -3,6 +3,7 @@
 import { EXPR_BLOCK_KEYS
        , KEYS_WITH_NAME_FIELDS
        , PLURAL_KEYS
+       , KEYS_FOR_SETS
        , QUOTED_LITERAL_KEYS } from "./keys"
 
 declare global {
@@ -67,10 +68,9 @@ export class Serializer {
         For example, `dimension` can be repeated, but `sql` cannot be.
         The key `allowed_value` is a special case and changes behavior depending on its
         parent key. If its parent key is `access_grant`, it is a list and cannot be
-        repeated. Otherwise, it can be repeated. The key `filters` is another special
-        key associated to the new filters syntax, and it also cannot be repeated. */
+        repeated. Otherwise, it can be repeated. */
 
-        if (key.substr(-1) == "s" && key != "filters") {
+        if (key.substr(-1) == "s") {
             let singular_key: string = key.replace(/s$/, '');
             return (PLURAL_KEYS.indexOf(singular_key) != -1 && !(
                 singular_key == "allowed_value"
@@ -103,7 +103,13 @@ export class Serializer {
     serialize(obj: Object): string {
         // Returns a LookML string serialized from an object.
     
-        return "" + this.chain_with_newline(obj).next().value
+        let output: string = ""
+        for (let [key, value] of Object.entries(obj)) {
+            let entry: object = {}
+            entry[key] = value
+            output += this.chain_with_newline(entry).next().value
+        }
+        return "" + output
     }
 
     *expand_list(key: string, values: any): Generator<string> {
@@ -141,44 +147,43 @@ export class Serializer {
             A generator of serialized string chunks */
 
         let value_type: string = typeof(value)
-        let key_type: string = typeof(key)
 
         if (value_type == 'string') {
             yield* this.write_pair(key, value)
         }
-        else if (value_type == 'object' && key_type == 'string' && ['view','dimension','measure'].indexOf(key) == -1) {
-            if (this.is_plural_key(key)) {
+        else if (value_type == 'object') {
+            if (this.is_plural_key(key) && ['filters','bind_filters'].indexOf(key) == -1) {
                 yield* this.expand_list(key, value)
             }
-            else {
+            else if (KEYS_FOR_SETS.indexOf(key) != -1) {
                 yield* this.write_set(key, value)
             }
-        }
-        else if (value_type == 'object') {
-            let name: string = ""
-            if (KEYS_WITH_NAME_FIELDS.indexOf(key) != -1 || Object.keys(value).indexOf("name") == -1) {
-                name = ""
-            }
             else {
-                name = value.name
-                delete(value.name)
-            }
-            if (!isNaN(Number(key))) {
-                key = value.name
-            }
-            
-            let block: Generator<string> = this.write_block(key, value, name)
-            let output: string = ""
-            while (true) {
-                let iter: IteratorResult<string> = block.next()
-                if (!iter.done) {
-                    output += iter.value
+                let name: string = ""
+                if (KEYS_WITH_NAME_FIELDS.indexOf(key) != -1 || Object.keys(value).indexOf("name") == -1) {
+                    name = ""
                 }
                 else {
-                    break
+                    name = value.name
+                    delete(value.name)
                 }
+                if (!isNaN(Number(key))) {
+                    key = value.name
+                }
+                
+                let block: Generator<string> = this.write_block(key, value, name)
+                let output: string = ""
+                while (true) {
+                    let iter: IteratorResult<string> = block.next()
+                    if (!iter.done) {
+                        output += iter.value
+                    }
+                    else {
+                        break
+                    }
+                }
+                yield output
             }
-            yield output
         }
         else {
             throw new TypeError("Value must be a string, list, array, or object.")
@@ -253,12 +258,12 @@ export class Serializer {
             }
             for (let [idx, val] of Object.entries(values)) {
                 if (i > 0) {
-                    yield ","
+                    yield ", "
                     if (values.length > 5) {
                         yield this.newline_indent
                     }
                 }
-                if (isNaN(Number(idx)) && typeof(idx) == 'string') {
+                if (key == 'filters') {
                     yield* this.write_labeled_set(idx, val)
                 }
                 else {
@@ -292,7 +297,7 @@ export class Serializer {
             key: A LookML field type (e.g. "sql")
         Returns:
             A generator of serialized string chunks */
-        yield this.indent + key + ":"
+        yield this.indent + key + ": "
     }
 
     *write_value(key: string, value: any, force_quote: boolean = false): Generator<string> {
@@ -328,7 +333,7 @@ export class Serializer {
             A generator of serialized string chunks */
 
         yield key
-        yield ":"
+        yield ": "
         yield '"'
         yield value
         yield '"'
