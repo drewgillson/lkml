@@ -1,6 +1,6 @@
 {
   "name": "lkml",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A speedy LookML parser & serializer implemented in Typescript (port of joshtemple/lkml)",
   "main": "out/index.js",
   "types": "out/index.d.ts",
