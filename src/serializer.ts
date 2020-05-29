@@ -152,7 +152,7 @@ export class Serializer {
             yield* this.write_pair(key, value)
         }
         else if (value_type == 'object') {
-            if (this.is_plural_key(key) && ['filters','bind_filters'].indexOf(key) == -1) {
+            if (this.is_plural_key(key) && ['bind_filters'].indexOf(key) == -1) {
                 yield* this.expand_list(key, value)
             }
             else if (KEYS_FOR_SETS.indexOf(key) != -1) {
@@ -263,7 +263,7 @@ export class Serializer {
                         yield this.newline_indent
                     }
                 }
-                if (key == 'filters') {
+                if (['filters','sorts'].indexOf(key) != -1) {
                     yield* this.write_labeled_set(idx, val)
                 }
                 else {
@@ -334,8 +334,8 @@ export class Serializer {
 
         yield key
         yield ": "
-        yield '"'
+        if (['asc','desc'].indexOf(value) == -1) yield '"'
         yield value
-        yield '"'
+        if (['asc','desc'].indexOf(value) == -1) yield '"'
     }
 }

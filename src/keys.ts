@@ -11,7 +11,6 @@ export const PLURAL_KEYS: string[] = [
     "measure",
     "dimension",
     "dimension_group",
-    "filter",
     "access_filter",
     "bind_filter",
     "map_layer",
@@ -123,8 +122,10 @@ export const CHARACTER_TO_TOKEN = {
     ";": tokens.ExpressionBlockEndToken,
 }
 
+/* These are keys for fields that have values within square brackets [] */
 export const KEYS_FOR_SETS: string[] = [
     "filters",
+    "sorts",
     "required_access_grants",
     "timeframes",
     "intervals",

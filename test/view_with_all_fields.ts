@@ -270,6 +270,7 @@ view: view_name{
     percentile: 90
     precision: N
     filters: [dimension_name: "looker filter expression"]
+    sorts: [field: asc, field2: desc]
     default_value: "desired default value"
   }
 }`
