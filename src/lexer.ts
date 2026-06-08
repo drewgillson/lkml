@@ -137,6 +137,7 @@ export class Lexer {
                 return true
             }
         }
+        return false
     }
 
     scan_expression_block(): object {
@@ -145,13 +146,13 @@ export class Lexer {
         Looker usually adds an extra space before the `;;` terminal. */
 
         let chars = ""
-        while (this.peek_multiple(2) != ";;") {
+        while (this.peek_multiple(2) != ";;" && this.peek() != "\0") {
             if (this.peek() == "\n") {
                 this.line_number += 1
             }
             chars += this.consume()
         }
-        chars = chars.trim() // TODO: this was an rtrim... could it cause a bug?
+        chars = chars.trim()
         return new tokens.ExpressionBlockToken(chars, this.line_number)
     }
 
@@ -180,12 +181,9 @@ export class Lexer {
         method only scans for the trailing quote to indicate the end of the token. */
 
         let chars = ""
-        while (true) {
+        while (this.peek() != '"' && this.peek() != "\0") {
             let ch = this.peek()
-            if (ch == '"') {
-                break;
-            }
-            else if (ch == "\\") {
+            if (ch == "\\") {
                 chars += this.consume()  // Extra consume to skip the escaped character
             }
             else if (ch == "\n") {
@@ -193,7 +191,11 @@ export class Lexer {
             }
             chars += this.consume()
         }
-        this.advance()
+        // Leave the "\0" sentinel in place on an unterminated literal so scan()
+        // still terminates and the parser raises a SyntaxError instead of hanging.
+        if (this.peek() == '"') {
+            this.advance()
+        }
         return new tokens.QuotedLiteralToken(chars, this.line_number)
     }
 }

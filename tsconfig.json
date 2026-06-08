@@ -8,7 +8,16 @@
         "lib": [
             "es2020",
             "dom",
-        ]
+        ],
+        "skipLibCheck": true,
+        "strictNullChecks": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "alwaysStrict": true,
+        "forceConsistentCasingInFileNames": true
     },
     "include": [
         "src/**/*",

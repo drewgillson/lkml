@@ -46,10 +46,8 @@ view: view_name{
   derived_table: {
     explore_source: explore_name{
       bind_filters: {
-        undefined: {
-          from_field: field_name
-          to_field: field_name
-        }
+        from_field: field_name
+        to_field: field_name
       }
 
       column: column_name{

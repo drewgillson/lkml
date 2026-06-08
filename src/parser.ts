@@ -3,15 +3,6 @@
 import * as tokens from "./tokens"
 import { PLURAL_KEYS } from "./keys"
 
-declare global {
-    interface String {
-        repeat(c: number): string;
-    }
-    interface ObjectConstructor {
-        assign(...objects: Object[]): Object;
-    }
-}
-
 // Delimiter character used during logging to show the depth of nesting
 const DELIMITER: string = ". "
 const DEBUG = false
@@ -42,10 +33,15 @@ export class Parser {
         literal ← [0-9A-Za-z_]+
     */
 
+    // Names of every registered token type, computed once instead of rescanning
+    // the registry on every check() call.
+    static valid_token_names = new Set(tokens.tokenTypes.map((t: any) => t.name))
+
     tokens: object
     index: number
     progress: number
     depth: number
+    container_depth: number
     log_debug: boolean
 
     constructor(stream: object) {
@@ -65,6 +61,7 @@ export class Parser {
         this.index = 0
         this.progress = 0
         this.depth = -1
+        this.container_depth = -1
         this.log_debug = DEBUG
     }
 
@@ -126,19 +123,10 @@ export class Parser {
             }
 
             // Determine if input_tokens are valid Tokens
-            let valid_tokens: number = 0
-            for (let type_key in tokens.tokenTypes) {
-                let token_type = tokens.tokenTypes[type_key];
-                for (let token_key in input_tokens) {
-                    let token = input_tokens[token_key]
-                    if (token_type.name == token.name) {
-                        valid_tokens++
-                        break
-                    }
+            for (let token_key in input_tokens) {
+                if (!Parser.valid_token_names.has(input_tokens[token_key].name)) {
+                    throw new TypeError("Input contained invalid token types.")
                 }
-            }
-            if (valid_tokens != input_tokens.length) {
-                throw new TypeError("Input contained invalid token types.")
             }
 
             // Determine if the current token is one of the desired input_tokens
@@ -193,7 +181,7 @@ export class Parser {
                 }
             }
             else if (Object.keys(target).indexOf(key) != -1) {
-                if (this.depth == 0) {
+                if (this.container_depth == 0) {
                     console.log("Multiple declarations of top-level key " + key + " found. Using the last-declared value.")
                     target[key] = update[key]
                 }
@@ -214,51 +202,52 @@ export class Parser {
         Grammar:
             expression ← (block / pair / list)* */
         
-        let mark = this.index
         this.depth += 1
+        // container_depth tracks nesting of containers only, restored on every
+        // exit, so update_tree can tell a top-level key (last-wins) from a
+        // nested one (error). depth is left for debug-log indentation.
+        this.container_depth += 1
+        try {
+            if (this.log_debug) {
+                let grammar = "[expression] = (block / pair / list)*"
+                console.log(DELIMITER.repeat(this.get_depth()) + "Try to parse " + grammar)
+            }
+            let expression = {}
+            if (this.check(tokens.StreamStartToken)) {
+                this.advance()
+            }
+            while (!this.check(tokens.StreamEndToken, tokens.BlockEndToken)) {
 
-        if (this.log_debug) {
-            let grammar = "[expression] = (block / pair / list)*"
-            console.log(DELIMITER.repeat(this.get_depth()) + "Try to parse " + grammar)
-        }
-        let expression = {}
-        if (this.check(tokens.StreamStartToken)) {
-            this.advance()
-        }
-        while (!this.check(tokens.StreamEndToken, tokens.BlockEndToken)) {
+                let block = this.parse_block()
+                if (block) {
+                    this.update_tree(expression, block)
+                    continue
+                }
 
-            let block = this.parse_block()
-            if (block) {
-                this.update_tree(expression, block)
-                continue
+                let pair = this.parse_pair()
+                if (pair) {
+                    this.update_tree(expression, pair)
+                    continue
+                }
+
+                let list = this.parse_list()
+                if (list) {
+                    expression = Object.assign(expression, list)
+                    continue
+                }
+
+                let token = this.tokens[this.progress]
+                throw new SyntaxError("Unable to find a matching expression for " + token.id + " on line " + token.line_number)
             }
 
-            let pair = this.parse_pair()
-            if (pair) {
-                this.update_tree(expression, pair)
-                continue
+            if (this.log_debug) {
+                console.log(DELIMITER.repeat(this.get_depth()) + "Successfully parsed expression.")
             }
 
-            let list = this.parse_list()
-            if (list) {
-                expression = Object.assign(expression, list)
-                continue
-            }
-
-            let token = this.tokens[this.progress]
-            throw new SyntaxError("Unable to find a matching expression for " + token.id + " on line " + token.line_number)
+            return expression
+        } finally {
+            this.container_depth -= 1
         }
-
-        if (this.log_debug) {
-            console.log(DELIMITER.repeat(this.get_depth()) + "Successfully parsed expression.")
-        }
-
-        if (!expression) {
-            this.depth -= 1
-            this.backtrack(mark)
-        }
-
-        return expression
     }
 
     parse_block() {
@@ -512,7 +501,7 @@ export class Parser {
 
         if (this.check(tokens.ListEndToken)) {
             this.advance()
-            let list = []
+            let list = {}
             list[key] = csv
             if (this.log_debug) {
                 console.log(DELIMITER.repeat(this.get_depth()) + "Successfully parsed a list.")
@@ -549,7 +538,7 @@ export class Parser {
             let grammar = '[csv] = (literal / quoted_literal) ("," (literal / quoted_literal))* ","?'
             console.log(DELIMITER.repeat(this.get_depth()) + "Try to parse " + grammar)
         }
-        let values = []
+        let values: any[] = []
 
         if (this.check(tokens.LiteralToken, tokens.QuotedLiteralToken)) {
             values.push(this.consume_token_value())
