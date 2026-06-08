@@ -1,6 +1,6 @@
 // Tokens used by the lexer to tokenize LookML.
 
-export const tokenTypes = [];
+export const tokenTypes: Function[] = [];
 
 export function register_token() {
     return function(target: Function) {

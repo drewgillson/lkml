@@ -6,12 +6,6 @@ import { EXPR_BLOCK_KEYS
        , KEYS_FOR_SETS
        , QUOTED_LITERAL_KEYS } from "./keys"
 
-declare global {
-    interface Object {
-        entries<X extends string,Y>(o: { [key in X]: Y }): [X, Y][];
-    }
-}
-
 export class Serializer {
     /* Serializes a Javascript object into a LookML string.
     Review the grammar specified for the Parser class to understand how LookML
@@ -127,7 +121,7 @@ export class Serializer {
             key = key.replace(/s$/, '')
         }
         let i: number = 0
-        for (let [idx, val] of values.entries()) {
+        for (let val of values) {
             if (i > 0) {
                 yield "\n"
             }
