@@ -158,6 +158,12 @@ export class Serializer {
             else if (KEYS_FOR_SETS.indexOf(key) != -1) {
                 yield* this.write_set(key, value)
             }
+            else if (Array.isArray(value)) {
+                // Anonymous-block plural keys (e.g. bind_filters): emit each
+                // element as its own block. Falling through to the block branch
+                // below serialized them as `bind_filters: { undefined: {...} }`.
+                yield* this.expand_list(key, value)
+            }
             else {
                 let name: string = ""
                 if (KEYS_WITH_NAME_FIELDS.indexOf(key) != -1 || Object.keys(value).indexOf("name") == -1) {
@@ -167,10 +173,7 @@ export class Serializer {
                     name = value.name
                     delete(value.name)
                 }
-                if (!isNaN(Number(key))) {
-                    key = value.name
-                }
-                
+
                 let block: Generator<string> = this.write_block(key, value, name)
                 let output: string = ""
                 while (true) {
